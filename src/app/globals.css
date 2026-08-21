@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme {
+  /* Congress Blue — primary actions, links, highlights */
+  --color-congress-50: #f1f6fe;
+  --color-congress-100: #e2edfc;
+  --color-congress-200: #bfdaf8;
+  --color-congress-300: #86bcf3;
+  --color-congress-400: #469aea;
+  --color-congress-500: #1e7dd9;
+  --color-congress-600: #1061b9;
+  --color-congress-700: #0e4c93;
+  --color-congress-800: #10437c;
+  --color-congress-900: #133967;
+  --color-congress-950: #0d2444;
+
+  /* Ebony Clay — backgrounds, cards, surfaces */
+  --color-ebony-50: #f3f6fb;
+  --color-ebony-100: #e3ebf6;
+  --color-ebony-200: #cddcf0;
+  --color-ebony-300: #aac6e6;
+  --color-ebony-400: #82a8d8;
+  --color-ebony-500: #648bcd;
+  --color-ebony-600: #5072c0;
+  --color-ebony-700: #4660af;
+  --color-ebony-800: #3e508f;
+  --color-ebony-900: #364572;
+  --color-ebony-950: #222942;
+
+  /* Semantic surface aliases */
+  --color-surface: var(--color-ebony-950);
+  --color-surface-raised: #2a3252;
+  --color-surface-overlay: #1a2038;
+  --color-border-subtle: #333c5e;
+
+  /* Status colors */
+  --color-status-todo: #8b93a7;
+  --color-status-progress: #469aea;
+  --color-status-review: #b98af7;
+  --color-status-done: #4ade80;
+
+  /* Priority colors */
+  --color-priority-urgent: #ef4444;
+  --color-priority-high: #f97316;
+  --color-priority-normal: #469aea;
+  --color-priority-low: #8b93a7;
+}
+
+body {
+  background-color: var(--color-ebony-950);
+  color: var(--color-ebony-100);
+}
+
+::selection {
+  background-color: color-mix(in srgb, var(--color-congress-500) 40%, transparent);
+}
