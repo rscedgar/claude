@@ -18,6 +18,7 @@ interface UiStore {
   sortDirection: SortDirection;
   filters: TaskFilters;
   sidebarCollapsed: boolean;
+  favorites: string[];
 
   openTaskId: string | null;
   commandOpen: boolean;
@@ -29,6 +30,7 @@ interface UiStore {
   setFilter: <K extends keyof TaskFilters>(key: K, values: TaskFilters[K]) => void;
   clearFilters: () => void;
   toggleSidebar: () => void;
+  toggleFavorite: (entityId: string) => void;
 
   openTask: (taskId: string) => void;
   closeTask: () => void;
@@ -44,6 +46,7 @@ export const useUiStore = create<UiStore>()(
       sortDirection: "asc",
       filters: emptyFilters,
       sidebarCollapsed: false,
+      favorites: [],
 
       openTaskId: null,
       commandOpen: false,
@@ -60,6 +63,12 @@ export const useUiStore = create<UiStore>()(
       clearFilters: () => set({ filters: { ...emptyFilters } }),
       toggleSidebar: () =>
         set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      toggleFavorite: (entityId) =>
+        set((state) => ({
+          favorites: state.favorites.includes(entityId)
+            ? state.favorites.filter((id) => id !== entityId)
+            : [...state.favorites, entityId],
+        })),
 
       openTask: (taskId) => set({ openTaskId: taskId }),
       closeTask: () => set({ openTaskId: null }),
@@ -75,6 +84,7 @@ export const useUiStore = create<UiStore>()(
         sortDirection: state.sortDirection,
         filters: state.filters,
         sidebarCollapsed: state.sidebarCollapsed,
+        favorites: state.favorites,
       }),
     },
   ),
