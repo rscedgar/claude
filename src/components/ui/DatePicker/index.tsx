@@ -5,12 +5,14 @@ import type { ComponentProps } from "react";
 import { cn } from "@/lib/cn";
 import { styles } from "../FieldStyles";
 
-interface DatePickerProps extends ComponentProps<"input"> {
+interface DatePickerProps
+  extends Omit<ComponentProps<"input">, "value"> {
   label?: string;
+  value?: string | null;
 }
 
-const toInputDateTime = (value: ComponentProps<"input">["value"]): string => {
-  if (typeof value !== "string" || !value) return "";
+const toInputDateTime = (value: string | null | undefined): string => {
+  if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
   const pad = (n: number) => String(n).padStart(2, "0");

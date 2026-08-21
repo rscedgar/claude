@@ -14,11 +14,21 @@ interface DropdownMenuItem {
 
 interface DropdownMenuProps {
   trigger: ReactNode;
-  items: DropdownMenuItem[];
+  /** Items de menú; al hacer click se cierra automáticamente. */
+  items?: DropdownMenuItem[];
+  /** Contenido libre del panel; permanece abierto hasta click fuera. */
+  children?: ReactNode;
   align?: "left" | "right";
+  panelClassName?: string;
 }
 
-const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, items, align = "right" }) => {
+const DropdownMenu: React.FC<DropdownMenuProps> = ({
+  trigger,
+  items,
+  children,
+  align = "right",
+  panelClassName,
+}) => {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -29,7 +39,7 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, items, align = "ri
       <span
         role="button"
         tabIndex={0}
-        className="cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-congress-500 rounded-lg"
+        className="cursor-pointer rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-congress-500"
         onClick={() => setOpen((prev) => !prev)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -41,22 +51,30 @@ const DropdownMenu: React.FC<DropdownMenuProps> = ({ trigger, items, align = "ri
         {trigger}
       </span>
       {open && (
-        <div role="menu" className={cn(styles.menu, align === "right" ? styles.alignRight : styles.alignLeft)}>
-          {items.map((item) => (
-            <button
-              key={item.label}
-              type="button"
-              role="menuitem"
-              className={cn(styles.item, item.danger && styles.itemDanger)}
-              onClick={() => {
-                setOpen(false);
-                item.onSelect();
-              }}
-            >
-              {item.icon}
-              {item.label}
-            </button>
-          ))}
+        <div
+          role="menu"
+          className={cn(
+            styles.menu,
+            align === "right" ? styles.alignRight : styles.alignLeft,
+            panelClassName,
+          )}
+        >
+          {children ??
+            items?.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                role="menuitem"
+                className={cn(styles.item, item.danger && styles.itemDanger)}
+                onClick={() => {
+                  setOpen(false);
+                  item.onSelect();
+                }}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
         </div>
       )}
     </div>
