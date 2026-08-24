@@ -8,6 +8,7 @@ import Select from "@/components/ui/Select";
 import Skeleton from "@/components/ui/Skeleton";
 import TaskTable from "@/components/tasks/TaskTable";
 import NewTaskModal from "@/components/tasks/NewTaskModal";
+import ViewSwitcher from "@/components/tasks/ViewSwitcher";
 import { useScopedTasks, type ScopeType } from "@/hooks/useScopedTasks";
 import { useStoresHydrated } from "@/hooks/useStoresHydrated";
 import { useUiStore } from "@/stores/ui-store";
@@ -93,6 +94,7 @@ const ListViewSection = ({ scopeType, scopeId }: ListViewSectionProps) => {
           )}
         </div>
         <div className={styles.toolbarRight}>
+          <ViewSwitcher />
           <Select
             aria-label="Agrupar por"
             options={groupByOptions}
