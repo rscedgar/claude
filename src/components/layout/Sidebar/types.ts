@@ -18,6 +18,8 @@ export interface SidebarStyles {
   count: string;
   star: string;
   starActive: string;
+  quickAdd: string;
+  addListRow: string;
   treeIndent: string;
   folderRow: string;
   collapsedBody: string;
