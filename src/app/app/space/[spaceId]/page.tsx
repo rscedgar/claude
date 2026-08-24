@@ -1,12 +1,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import ListViewSection from "@/sections/ListViewSection";
+import TaskArea from "@/sections/TaskArea";
 
 const SpacePage = () => {
   const { spaceId } = useParams<{ spaceId: string }>();
 
-  return <ListViewSection scopeType="space" scopeId={spaceId} />;
+  return <TaskArea scopeType="space" scopeId={spaceId} />;
 };
 
 export default SpacePage;

@@ -1,12 +1,12 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import ListViewSection from "@/sections/ListViewSection";
+import TaskArea from "@/sections/TaskArea";
 
 const FolderPage = () => {
   const { folderId } = useParams<{ folderId: string }>();
 
-  return <ListViewSection scopeType="folder" scopeId={folderId} />;
+  return <TaskArea scopeType="folder" scopeId={folderId} />;
 };
 
 export default FolderPage;
