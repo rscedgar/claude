@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
+import TaskDetailDrawer from "@/components/tasks/TaskDetailDrawer";
 import { cn } from "@/lib/cn";
 import { useUiStore } from "@/stores/ui-store";
 import { styles } from "./styles";
@@ -51,6 +52,8 @@ const AppShell = ({ children }: AppShellProps) => {
           {children}
         </main>
       </div>
+
+      <TaskDetailDrawer />
     </div>
   );
 };

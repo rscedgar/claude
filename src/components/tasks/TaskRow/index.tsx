@@ -12,6 +12,7 @@ import { cn } from "@/lib/cn";
 import type { PriorityLevel, Task, TaskStatus, User } from "@/types";
 import { useTaskStore } from "@/stores/task-store";
 import { useUserStore } from "@/stores/user-store";
+import { useUiStore } from "@/stores/ui-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { formatShortDate, isOverdue, isToday } from "@/utils/date";
 import { priorityLabels, priorityOrder, priorityColors } from "@/utils/task-grouping";
@@ -26,6 +27,7 @@ const TaskRow = ({ task, statuses }: TaskRowProps) => {
   const { showToast } = useToast();
   const updateTask = useTaskStore((state) => state.updateTask);
   const moveTask = useTaskStore((state) => state.moveTask);
+  const openTask = useUiStore((state) => state.openTask);
   const users = useUserStore((state) => state.users);
   const tags = useWorkspaceStore((state) => state.tags);
 
@@ -84,12 +86,27 @@ const TaskRow = ({ task, statuses }: TaskRowProps) => {
       : undefined;
 
   return (
-    <div className={styles.root}>
-      <span className={styles.checkboxCell}>
+    <div
+      className={styles.root}
+      role="button"
+      tabIndex={0}
+      aria-label={`Abrir detalle de ${task.name}`}
+      onClick={() => openTask(task.id)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") openTask(task.id);
+      }}
+    >
+      <span
+        className={styles.checkboxCell}
+        onClick={(event) => event.stopPropagation()}
+      >
         <Checkbox checked={isDone} onChange={toggleComplete} aria-label="Completar tarea" />
       </span>
 
-      <div className={styles.nameCell}>
+      <div
+        className={styles.nameCell}
+        onClick={(event) => event.stopPropagation()}
+      >
         {editingName ? (
           <input
             ref={inputRef}
@@ -129,111 +146,122 @@ const TaskRow = ({ task, statuses }: TaskRowProps) => {
         )}
       </div>
 
-      <DropdownMenu
-        align="left"
-        panelClassName="min-w-40"
-        trigger={
-          <button type="button" className={cn(styles.cellButton)}>
-            <span
-              className="size-2 shrink-0 rounded-full"
-              style={{ backgroundColor: currentStatus?.color ?? "#8b93a7" }}
-            />
-            <span className="truncate">{currentStatus?.name ?? "Sin estado"}</span>
-          </button>
-        }
-        items={statuses.map((status) => ({
-          label: status.name,
-          icon: (
-            <span
-              className="size-2 shrink-0 rounded-full"
-              style={{ backgroundColor: status.color }}
-            />
-          ),
-          onSelect: () => moveTask(task.id, status.id),
-        }))}
-      />
-
-      <DropdownMenu
-        align="left"
-        panelClassName="min-w-36"
-        trigger={
-          <button type="button" className={cn(styles.cellButton)}>
-            {task.priority !== "none" && (
-              <Flag
-                className="size-3.5 shrink-0 fill-current"
-                style={{ color: priorityColors[task.priority] }}
+      <span onClick={(event) => event.stopPropagation()}>
+        <DropdownMenu
+          align="left"
+          panelClassName="min-w-40"
+          trigger={
+            <button type="button" className={cn(styles.cellButton)}>
+              <span
+                className="size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: currentStatus?.color ?? "#8b93a7" }}
               />
-            )}
-            <span className="truncate">{priorityLabels[task.priority]}</span>
-          </button>
-        }
-        items={priorityOrder.map((priority) => ({
-          label: priorityLabels[priority],
-          icon:
-            priority !== "none" ? (
-              <Flag
-                className="size-3.5 shrink-0 fill-current"
-                style={{ color: priorityColors[priority] }}
+              <span className="truncate">{currentStatus?.name ?? "Sin estado"}</span>
+            </button>
+          }
+          items={statuses.map((status) => ({
+            label: status.name,
+            icon: (
+              <span
+                className="size-2 shrink-0 rounded-full"
+                style={{ backgroundColor: status.color }}
               />
-            ) : undefined,
-          onSelect: () => changePriority(priority),
-        }))}
-      />
-
-      <DropdownMenu
-        align="left"
-        panelClassName="w-60 p-2"
-        trigger={
-          <button type="button" className={cn(styles.cellButton, dueClassName)}>
-            <CalendarDays className="size-3.5 shrink-0" />
-            <span className="truncate">{dueLabel}</span>
-          </button>
-        }
-      >
-        <DatePicker
-          value={task.dueDate}
-          onChange={(event) => {
-            const value = event.target.value;
-            updateTask(task.id, {
-              dueDate: value ? new Date(value).toISOString() : null,
-            });
-          }}
-          className="border-none bg-transparent px-0 focus:ring-0"
+            ),
+            onSelect: () => moveTask(task.id, status.id),
+          }))}
         />
-      </DropdownMenu>
+      </span>
 
-      <DropdownMenu
-        align="right"
-        panelClassName="min-w-52 p-1"
-        trigger={
-          <span className={cn(styles.assigneesCell, "cursor-pointer")}>
-            {assignedUsers.length > 0 ? (
+      <span onClick={(event) => event.stopPropagation()}>
+        <DropdownMenu
+          align="left"
+          panelClassName="min-w-36"
+          trigger={
+            <button type="button" className={cn(styles.cellButton)}>
+              {task.priority !== "none" && (
+                <Flag
+                  className="size-3.5 shrink-0 fill-current"
+                  style={{ color: priorityColors[task.priority] }}
+                />
+              )}
+              <span className="truncate">{priorityLabels[task.priority]}</span>
+            </button>
+          }
+          items={priorityOrder.map((priority) => ({
+            label: priorityLabels[priority],
+            icon:
+              priority !== "none" ? (
+                <Flag
+                  className="size-3.5 shrink-0 fill-current"
+                  style={{ color: priorityColors[priority] }}
+                />
+              ) : undefined,
+            onSelect: () => changePriority(priority),
+          }))}
+        />
+      </span>
+
+      <span onClick={(event) => event.stopPropagation()}>
+        <DropdownMenu
+          align="left"
+          panelClassName="w-60 p-2"
+          trigger={
+            <button type="button" className={cn(styles.cellButton, dueClassName)}>
+              <CalendarDays className="size-3.5 shrink-0" />
+              <span className="truncate">{dueLabel}</span>
+            </button>
+          }
+        >
+          <DatePicker
+            value={task.dueDate}
+            onChange={(event) => {
+              const value = event.target.value;
+              updateTask(task.id, {
+                dueDate: value ? new Date(value).toISOString() : null,
+              });
+            }}
+            className="border-none bg-transparent px-0 focus:ring-0"
+          />
+        </DropdownMenu>
+      </span>
+
+      <span
+        className={styles.assigneesCell}
+        onClick={(event) => event.stopPropagation()}
+      >
+        <DropdownMenu
+          align="right"
+          panelClassName="min-w-52 p-1"
+          trigger={
+            assignedUsers.length > 0 ? (
               <AvatarGroup users={assignedUsers} />
             ) : (
-              <span className="text-xs text-ebony-500">—</span>
-            )}
-          </span>
-        }
-      >
-        {users.map((user: User) => (
-          <label
-            key={user.id}
-            className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-ebony-100 transition-colors hover:bg-white/5"
-          >
-            <Checkbox
-              checked={task.assigneeIds.includes(user.id)}
-              onChange={() => toggleAssignee(user.id)}
-            />
-            <span
-              className="flex size-6 items-center justify-center rounded-full text-[10px] font-semibold uppercase ring-1 ring-white/10"
-              style={{ backgroundColor: `${user.avatarColor}33`, color: user.avatarColor }}
+              <button type="button" className={styles.cellButton}>
+                —
+              </button>
+            )
+          }
+        >
+          {users.map((user: User) => (
+            <label
+              key={user.id}
+              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm text-ebony-100 transition-colors hover:bg-white/5"
             >
-              {user.initials}
-            </span>
-            {user.name}
-          </label>
-        ))}
-      </DropdownMenu>
+              <Checkbox
+                checked={task.assigneeIds.includes(user.id)}
+                onChange={() => toggleAssignee(user.id)}
+              />
+              <span
+                className="flex size-6 items-center justify-center rounded-full text-[10px] font-semibold uppercase ring-1 ring-white/10"
+                style={{ backgroundColor: `${user.avatarColor}33`, color: user.avatarColor }}
+              >
+                {user.initials}
+              </span>
+              {user.name}
+            </label>
+          ))}
+        </DropdownMenu>
+      </span>
 
       <span className={styles.menuCell} />
     </div>
