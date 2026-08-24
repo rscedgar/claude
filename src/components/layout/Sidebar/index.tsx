@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import {
+import { usePathname } from "next/navigation";import {
   ChevronDown,
   Folder as FolderIcon,
   Hash,
@@ -32,18 +31,26 @@ const FavoriteStar = ({ entityId }: { entityId: string }) => {
 
   return (
     <Tooltip label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}>
-      <button
-        type="button"
+      <span
+        role="button"
+        tabIndex={0}
         aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
         onClick={(event) => {
           event.preventDefault();
           event.stopPropagation();
           toggleFavorite(entityId);
         }}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleFavorite(entityId);
+          }
+        }}
         className={cn(styles.star, isFavorite && styles.starActive)}
       >
         <Star className="size-3.5" />
-      </button>
+      </span>
     </Tooltip>
   );
 };
@@ -78,11 +85,16 @@ interface SpaceTreeProps {
 const SpaceTree = ({ spaceId, collapsedSidebar, openCounts }: SpaceTreeProps) => {
   const pathname = usePathname();
   const space = useWorkspaceStore((state) => state.spaces.find((s) => s.id === spaceId));
-  const folders = useWorkspaceStore((state) =>
-    state.folders.filter((folder) => folder.spaceId === spaceId),
+  const allFolders = useWorkspaceStore((state) => state.folders);
+  const allTaskLists = useWorkspaceStore((state) => state.taskLists);
+
+  const folders = useMemo(
+    () => allFolders.filter((folder) => folder.spaceId === spaceId),
+    [allFolders, spaceId],
   );
-  const taskLists = useWorkspaceStore((state) =>
-    state.taskLists.filter((list) => list.spaceId === spaceId),
+  const taskLists = useMemo(
+    () => allTaskLists.filter((list) => list.spaceId === spaceId),
+    [allTaskLists, spaceId],
   );
 
   const [expanded, setExpanded] = useState(true);
