@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CalendarDays, Flag } from "lucide-react";
@@ -7,6 +8,7 @@ import AvatarGroup from "@/components/ui/AvatarGroup";
 import TagChip from "@/components/ui/TagChip";
 import { cn } from "@/lib/cn";
 import { useTaskStore } from "@/stores/task-store";
+import { useUiStore } from "@/stores/ui-store";
 import { useUserStore } from "@/stores/user-store";
 import { useWorkspaceStore } from "@/stores/workspace-store";
 import { formatShortDate, isOverdue, isToday } from "@/utils/date";
@@ -78,6 +80,8 @@ const TaskCard = ({ taskId, dragging, overlay }: TaskCardProps) => {
 export const SortableTaskCard = ({ taskId }: { taskId: string }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: taskId, data: { type: "task" } });
+  const openTask = useUiStore((state) => state.openTask);
+  const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
 
   return (
     <div
@@ -86,6 +90,20 @@ export const SortableTaskCard = ({ taskId }: { taskId: string }) => {
       {...attributes}
       {...listeners}
       className={cn(isDragging && "opacity-40")}
+      role="button"
+      tabIndex={0}
+      aria-label="Abrir detalle de tarea"
+      onPointerDown={(event) => {
+        pointerDownRef.current = { x: event.clientX, y: event.clientY };
+      }}
+      onClick={(event) => {
+        const origin = pointerDownRef.current;
+        const moved = origin
+          ? Math.hypot(event.clientX - origin.x, event.clientY - origin.y)
+          : 0;
+        if (moved < 6) openTask(taskId);
+        pointerDownRef.current = null;
+      }}
     >
       <TaskCard taskId={taskId} />
     </div>
