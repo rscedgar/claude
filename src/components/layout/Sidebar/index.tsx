@@ -12,6 +12,7 @@ import { usePathname } from "next/navigation";import {
   Star,
 } from "lucide-react";
 import NavItem from "@/components/layout/NavItem";
+import NewListModal from "@/components/layout/NewListModal";
 import NewSpaceModal from "@/components/layout/NewSpaceModal";
 import Skeleton from "@/components/ui/Skeleton";
 import Tooltip from "@/components/ui/Tooltip";
@@ -54,6 +55,31 @@ const FavoriteStar = ({ entityId }: { entityId: string }) => {
     </Tooltip>
   );
 };
+
+const QuickAddButton = ({ label, onClick }: { label: string; onClick: () => void }) => (
+  <Tooltip label={label}>
+    <span
+      role="button"
+      tabIndex={0}
+      aria-label={label}
+      onClick={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        onClick();
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          event.stopPropagation();
+          onClick();
+        }
+      }}
+      className={styles.quickAdd}
+    >
+      <Plus className="size-3.5" />
+    </span>
+  </Tooltip>
+);
 
 interface TreeListProps {
   listId: string;
@@ -99,6 +125,13 @@ const SpaceTree = ({ spaceId, collapsedSidebar, openCounts }: SpaceTreeProps) =>
 
   const [expanded, setExpanded] = useState(true);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+  const [listModalFolderId, setListModalFolderId] = useState<string | null>(null);
+  const [listModalOpen, setListModalOpen] = useState(false);
+
+  const openListModal = (folderId: string | null) => {
+    setListModalFolderId(folderId);
+    setListModalOpen(true);
+  };
 
   if (!space) return null;
 
@@ -136,6 +169,12 @@ const SpaceTree = ({ spaceId, collapsedSidebar, openCounts }: SpaceTreeProps) =>
         <span className={styles.label}>{space.name}</span>
         <span className={styles.count}>{totalOpen}</span>
         <span onClick={(event) => event.stopPropagation()}>
+          <QuickAddButton
+            label={`Nueva lista en ${space.name}`}
+            onClick={() => openListModal(null)}
+          />
+        </span>
+        <span onClick={(event) => event.stopPropagation()}>
           <FavoriteStar entityId={space.id} />
         </span>
       </button>
@@ -161,6 +200,12 @@ const SpaceTree = ({ spaceId, collapsedSidebar, openCounts }: SpaceTreeProps) =>
                   />
                   <FolderIcon className="size-3.5 shrink-0 text-ebony-400" aria-hidden />
                   <span className={styles.label}>{folder.name}</span>
+                  <span onClick={(event) => event.stopPropagation()}>
+                    <QuickAddButton
+                      label={`Nueva lista en ${folder.name}`}
+                      onClick={() => openListModal(folder.id)}
+                    />
+                  </span>
                 </button>
                 {folderExpanded && (
                   <div className={styles.treeIndent}>
@@ -186,8 +231,26 @@ const SpaceTree = ({ spaceId, collapsedSidebar, openCounts }: SpaceTreeProps) =>
               count={openCounts[list.id]}
             />
           ))}
+
+          {expanded && (
+            <button
+              type="button"
+              onClick={() => openListModal(null)}
+              className={styles.addListRow}
+            >
+              <Plus className="size-3.5" />
+              Nueva lista
+            </button>
+          )}
         </div>
       )}
+
+      <NewListModal
+        open={listModalOpen}
+        onClose={() => setListModalOpen(false)}
+        spaceId={space.id}
+        defaultFolderId={listModalFolderId}
+      />
     </div>
   );
 };

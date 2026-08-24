@@ -30,6 +30,17 @@ const styles: SidebarStyles = {
   count: "shrink-0 rounded-full bg-white/8 px-1.5 text-[11px] font-semibold tabular-nums text-ebony-300",
   star: "cursor-pointer rounded p-0.5 text-ebony-500 opacity-0 transition-opacity hover:text-congress-300 focus-visible:opacity-100 focus-visible:outline-hidden group-hover:opacity-100",
   starActive: "text-congress-400 opacity-100 [&>svg]:fill-current",
+  quickAdd: `
+    flex cursor-pointer items-center rounded p-0.5 text-ebony-500 opacity-0
+    transition-opacity hover:bg-white/8 hover:text-congress-300
+    focus-visible:opacity-100 focus-visible:outline-hidden
+    group-hover:opacity-100 group-focus-within:opacity-100
+  `,
+  addListRow: `
+    flex h-7 cursor-pointer items-center gap-1.5 rounded-md px-1.5 text-xs
+    font-medium text-ebony-400 transition-colors hover:bg-white/5
+    hover:text-white focus-visible:outline-hidden
+  `,
   treeIndent: "ml-3 border-l border-white/8 pl-1.5",
   folderRow: `
     flex h-7 w-full cursor-pointer items-center gap-1 rounded-md px-1.5
