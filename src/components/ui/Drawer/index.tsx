@@ -10,7 +10,7 @@ interface DrawerProps {
   open: boolean;
   onClose: () => void;
   title: ReactNode;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 const Drawer: React.FC<DrawerProps> = ({ open, onClose, title, children }) => {
