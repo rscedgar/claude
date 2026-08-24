@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import CommandPalette from "@/components/layout/CommandPalette";
 import Sidebar from "@/components/layout/Sidebar";
 import Topbar from "@/components/layout/Topbar";
 import TaskDetailDrawer from "@/components/tasks/TaskDetailDrawer";
@@ -54,6 +55,7 @@ const AppShell = ({ children }: AppShellProps) => {
       </div>
 
       <TaskDetailDrawer />
+      <CommandPalette />
     </div>
   );
 };
