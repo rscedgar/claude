@@ -1,4 +1,4 @@
-import { format, isBefore, startOfDay } from "date-fns";
+import { format, formatDistanceToNowStrict, isBefore, startOfDay } from "date-fns";
 import { es } from "date-fns/locale";
 
 export const formatShortDate = (iso: string): string =>
@@ -6,6 +6,9 @@ export const formatShortDate = (iso: string): string =>
 
 export const formatFullDate = (iso: string): string =>
   format(new Date(iso), "d 'de' MMMM, yyyy", { locale: es });
+
+export const formatRelativeTime = (iso: string): string =>
+  formatDistanceToNowStrict(new Date(iso), { addSuffix: true, locale: es });
 
 export const isOverdue = (iso: string | null): boolean => {
   if (!iso) return false;
