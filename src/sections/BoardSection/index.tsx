@@ -12,18 +12,23 @@ import {
   type DragStartEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { KanbanSquare, ListPlus } from "lucide-react";
+import { Filter, KanbanSquare, ListPlus } from "lucide-react";
 import BoardColumn from "@/components/tasks/BoardColumn";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import Skeleton from "@/components/ui/Skeleton";
 import TaskCard from "@/components/tasks/TaskCard";
+import TaskFiltersBar from "@/components/tasks/TaskFiltersBar";
 import ViewSwitcher from "@/components/tasks/ViewSwitcher";
 import NewTaskModal from "@/components/tasks/NewTaskModal";
 import { useScopedTasks, type ScopeType } from "@/hooks/useScopedTasks";
 import { useStoresHydrated } from "@/hooks/useStoresHydrated";
 import { useTaskStore } from "@/stores/task-store";
+import { useUiStore } from "@/stores/ui-store";
 import { useUserStore } from "@/stores/user-store";
+import { hasActiveFilters } from "@/types";
+import { filterTasks } from "@/utils/task-filtering";
+import { cn } from "@/lib/cn";
 import { styles } from "./styles";
 
 interface BoardSectionProps {
@@ -36,22 +41,32 @@ const BoardSection = ({ scopeType, scopeId }: BoardSectionProps) => {
   const users = useUserStore((state) => state.users);
   const moveTask = useTaskStore((state) => state.moveTask);
   const reorderTasks = useTaskStore((state) => state.reorderTasks);
+  const filters = useUiStore((state) => state.filters);
+  const clearFilters = useUiStore((state) => state.clearFilters);
 
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
 
+  const filtersActive = hasActiveFilters(filters);
+
+  const visibleTasks = useMemo(
+    () => (scoped.hydrated ? filterTasks(scoped.tasks, filters) : []),
+    [scoped.hydrated, scoped.tasks, filters],
+  );
+
   const tasksByStatus = useMemo(() => {
-    const map = new Map<string, typeof scoped.tasks>();
+    const map = new Map<string, typeof visibleTasks>();
     for (const status of scoped.statuses) map.set(status.id, []);
-    for (const task of scoped.tasks) {
+    for (const task of visibleTasks) {
       map.get(task.statusId)?.push(task);
     }
     return map;
-  }, [scoped]);
+  }, [scoped.statuses, visibleTasks]);
 
   if (!useStoresHydrated()) {
     return (
@@ -143,13 +158,21 @@ const BoardSection = ({ scopeType, scopeId }: BoardSectionProps) => {
 
   const quickAddListId = scoped.canCreateTask ? scoped.listIds[0] : undefined;
   const totalTasks = scoped.tasks.length;
+  const visibleCount = visibleTasks.length;
 
   return (
     <div className={styles.wrap}>
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
-          <span className={styles.totalBadge}>
-            {totalTasks} {totalTasks === 1 ? "tarea" : "tareas"}
+          <span
+            className={cn(
+              styles.totalBadge,
+              filtersActive && styles.totalBadgeFiltered,
+            )}
+          >
+            {filtersActive
+              ? `${visibleCount} de ${totalTasks} tareas`
+              : `${totalTasks} ${totalTasks === 1 ? "tarea" : "tareas"}`}
           </span>
           {scoped.canCreateTask && (
             <Button size="sm" onClick={() => setModalOpen(true)}>
@@ -158,14 +181,55 @@ const BoardSection = ({ scopeType, scopeId }: BoardSectionProps) => {
             </Button>
           )}
         </div>
-        <ViewSwitcher />
+        <div className={styles.toolbarRight}>
+          <ViewSwitcher />
+          <button
+            type="button"
+            onClick={() => setShowFilters((prev) => !prev)}
+            aria-expanded={showFilters}
+            className={cn(
+              styles.filterButton,
+              (showFilters || filtersActive) && styles.filterButtonActive,
+            )}
+          >
+            <Filter className="size-3.5" />
+            Filtros
+            {filtersActive && <span className={styles.filterCount}>●</span>}
+          </button>
+        </div>
       </div>
 
-      {totalTasks === 0 && scoped.listIds.length > 0 && !quickAddListId ? (
+      {showFilters && (
+        <TaskFiltersBar tasks={scoped.tasks} statuses={scoped.statuses} />
+      )}
+
+      {totalTasks === 0 ? (
         <EmptyState
           icon={<KanbanSquare className="size-6" />}
           title="Sin tareas todavía"
-          description="Las listas de este alcance aún no tienen tareas para mostrar en el tablero."
+          description={
+            scoped.canCreateTask
+              ? "Crea la primera tarea de esta lista para comenzar."
+              : "Las listas de este alcance aún no tienen tareas."
+          }
+          action={
+            scoped.canCreateTask ? (
+              <Button size="sm" onClick={() => setModalOpen(true)}>
+                Nueva tarea
+              </Button>
+            ) : undefined
+          }
+        />
+      ) : visibleCount === 0 ? (
+        <EmptyState
+          icon={<Filter className="size-6" />}
+          title="Ningún resultado coincide con los filtros"
+          description="Ajusta o limpia los filtros activos para ver más tareas."
+          action={
+            <Button size="sm" variant="secondary" onClick={clearFilters}>
+              Limpiar filtros
+            </Button>
+          }
         />
       ) : (
         <DndContext

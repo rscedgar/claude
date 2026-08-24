@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowDownUp, ListPlus } from "lucide-react";
+import { ArrowDownUp, Filter, ListPlus } from "lucide-react";
 import Button from "@/components/ui/Button";
 import EmptyState from "@/components/ui/EmptyState";
 import Select from "@/components/ui/Select";
 import Skeleton from "@/components/ui/Skeleton";
+import TaskFiltersBar from "@/components/tasks/TaskFiltersBar";
 import TaskTable from "@/components/tasks/TaskTable";
 import NewTaskModal from "@/components/tasks/NewTaskModal";
 import ViewSwitcher from "@/components/tasks/ViewSwitcher";
@@ -14,7 +15,10 @@ import { useStoresHydrated } from "@/hooks/useStoresHydrated";
 import { useUiStore } from "@/stores/ui-store";
 import { useUserStore } from "@/stores/user-store";
 import type { GroupByField, SortByField } from "@/types";
+import { hasActiveFilters } from "@/types";
+import { filterTasks } from "@/utils/task-filtering";
 import { groupTasks } from "@/utils/task-grouping";
+import { cn } from "@/lib/cn";
 import { styles } from "./styles";
 
 const groupByOptions: Array<{ value: GroupByField; label: string }> = [
@@ -43,18 +47,28 @@ const ListViewSection = ({ scopeType, scopeId }: ListViewSectionProps) => {
   const groupBy = useUiStore((state) => state.groupBy);
   const sortBy = useUiStore((state) => state.sortBy);
   const sortDirection = useUiStore((state) => state.sortDirection);
+  const filters = useUiStore((state) => state.filters);
   const setGroupBy = useUiStore((state) => state.setGroupBy);
   const setSortBy = useUiStore((state) => state.setSortBy);
   const toggleSortDirection = useUiStore((state) => state.toggleSortDirection);
+  const clearFilters = useUiStore((state) => state.clearFilters);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+
+  const filtersActive = hasActiveFilters(filters);
+
+  const visibleTasks = useMemo(
+    () => (scoped.hydrated ? filterTasks(scoped.tasks, filters) : []),
+    [scoped.hydrated, scoped.tasks, filters],
+  );
 
   const groups = useMemo(
     () =>
       scoped.hydrated
-        ? groupTasks(scoped.tasks, groupBy, { statuses: scoped.statuses, users })
+        ? groupTasks(visibleTasks, groupBy, { statuses: scoped.statuses, users })
         : [],
-    [scoped.hydrated, scoped.tasks, scoped.statuses, groupBy, users],
+    [scoped.hydrated, visibleTasks, scoped.statuses, groupBy, users],
   );
 
   if (!hydratedAll) {
@@ -83,8 +97,15 @@ const ListViewSection = ({ scopeType, scopeId }: ListViewSectionProps) => {
     <div className={styles.wrap}>
       <div className={styles.toolbar}>
         <div className={styles.toolbarLeft}>
-          <span className={styles.totalBadge}>
-            {scoped.tasks.length} {scoped.tasks.length === 1 ? "tarea" : "tareas"}
+          <span
+            className={cn(
+              styles.totalBadge,
+              filtersActive && styles.totalBadgeFiltered,
+            )}
+          >
+            {filtersActive
+              ? `${visibleTasks.length} de ${scoped.tasks.length} tareas`
+              : `${scoped.tasks.length} ${scoped.tasks.length === 1 ? "tarea" : "tareas"}`}
           </span>
           {scoped.canCreateTask && (
             <Button size="sm" onClick={() => setModalOpen(true)}>
@@ -95,6 +116,19 @@ const ListViewSection = ({ scopeType, scopeId }: ListViewSectionProps) => {
         </div>
         <div className={styles.toolbarRight}>
           <ViewSwitcher />
+          <button
+            type="button"
+            onClick={() => setShowFilters((prev) => !prev)}
+            aria-expanded={showFilters}
+            className={cn(
+              styles.filterButton,
+              (showFilters || filtersActive) && styles.filterButtonActive,
+            )}
+          >
+            <Filter className="size-3.5" />
+            Filtros
+            {filtersActive && <span className={styles.filterCount}>●</span>}
+          </button>
           <Select
             aria-label="Agrupar por"
             options={groupByOptions}
@@ -121,6 +155,10 @@ const ListViewSection = ({ scopeType, scopeId }: ListViewSectionProps) => {
         </div>
       </div>
 
+      {showFilters && (
+        <TaskFiltersBar tasks={scoped.tasks} statuses={scoped.statuses} />
+      )}
+
       {scoped.tasks.length === 0 ? (
         <EmptyState
           icon={<ListPlus className="size-6" />}
@@ -136,6 +174,17 @@ const ListViewSection = ({ scopeType, scopeId }: ListViewSectionProps) => {
                 Nueva tarea
               </Button>
             ) : undefined
+          }
+        />
+      ) : visibleTasks.length === 0 ? (
+        <EmptyState
+          icon={<Filter className="size-6" />}
+          title="Ningún resultado coincide con los filtros"
+          description="Ajusta o limpia los filtros activos para ver más tareas."
+          action={
+            <Button size="sm" variant="secondary" onClick={clearFilters}>
+              Limpiar filtros
+            </Button>
           }
         />
       ) : (
