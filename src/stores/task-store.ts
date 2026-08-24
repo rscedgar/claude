@@ -40,6 +40,7 @@ interface TaskStore {
   createTask: (input: CreateTaskInput) => string;
   updateTask: (taskId: string, patch: Partial<Omit<Task, "id">>) => void;
   moveTask: (taskId: string, statusId: string) => void;
+  reorderTasks: (orderedIds: string[]) => void;
   deleteTask: (taskId: string) => void;
   deleteTasksByListIds: (listIds: string[]) => void;
   moveTasksFromStatus: (fromStatusId: string, toStatusId: string) => void;
@@ -213,6 +214,19 @@ export const useTaskStore = create<TaskStore>()(
               t.statusId === fromStatusId ? { ...t, statusId: toStatusId } : t,
             ),
           })),
+
+        reorderTasks: (orderedIds) =>
+          set((state) => {
+            const rankById = new Map(orderedIds.map((id, index) => [id, index]));
+            return {
+              tasks: state.tasks.map((task) => {
+                const rank = rankById.get(task.id);
+                return rank === undefined || rank === task.order
+                  ? task
+                  : { ...task, order: rank };
+              }),
+            };
+          }),
 
         createChecklist: (taskId, title) => {
           const checklistId = genId();
